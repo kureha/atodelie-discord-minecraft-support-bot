@@ -23,23 +23,56 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AwsLogic = void 0;
+exports.AwsManager = void 0;
 // define logger
-const logger_1 = require("./../common/logger");
+const logger_1 = require("../common/logger");
 // Load the AWS SDK for Node.js
 const AWS = __importStar(require("aws-sdk"));
+// Load setTimeout
+const promises_1 = require("timers/promises");
 /**
  * AWS Logic class
  */
-class AwsLogic {
+class AwsManager {
     /**
      * Constructor
      */
     constructor(client_config) {
         // Set the region 
-        AWS.config.update({ region: AwsLogic.REGION });
+        AWS.config.update({ region: AwsManager.REGION });
         // Create client
         this.ec2 = new AWS.EC2(client_config);
+        // set default dry run is false
+        this.is_dry_run = false;
+    }
+    /**
+     * start EC2 instance and get public ip.
+     * @param instance_id
+     * @returns public ip address
+     */
+    start_instance_returns_public_ip(instance_id) {
+        const INTERVAL_TIME = 60000;
+        return new Promise((resolve, reject) => {
+            return this.start_instance(instance_id)
+                .then(() => {
+                // sleep interval
+                logger_1.logger.info(`sleep intervals. interval = ${INTERVAL_TIME}`);
+                return (0, promises_1.setTimeout)(INTERVAL_TIME, {});
+            })
+                .then(() => {
+                // get public ip
+                logger_1.logger.info(`try to get public ip.`);
+                return this.get_public_ip(instance_id);
+            })
+                .then((public_ip) => {
+                logger_1.logger.info(`get public ip ok. public_ip = ${public_ip}`);
+                resolve(public_ip);
+            })
+                .catch((e) => {
+                logger_1.logger.error(e);
+                reject(e);
+            });
+        });
     }
     /**
      * start EC2 instance
@@ -47,27 +80,27 @@ class AwsLogic {
      * @returns result
      */
     start_instance(instance_id) {
-        // create parameters
-        var params = {
-            InstanceIds: [
-                instance_id
-            ]
-        };
-        // result values
-        let result = false;
-        // start instance
-        this.ec2.startInstances(params, ((err, data) => {
-            // error checks
-            if (err) {
-                logger_1.logger.error(err);
-            }
-            else {
-                logger_1.logger.info(JSON.stringify(data));
-                result = true;
-            }
-        }));
-        // return result
-        return result;
+        return new Promise((resolve, reject) => {
+            // create parameters
+            const params = {
+                InstanceIds: [
+                    instance_id
+                ],
+                DryRun: this.is_dry_run
+            };
+            // start instance
+            this.ec2.startInstances(params, ((err, data) => {
+                // error checks
+                if (err) {
+                    logger_1.logger.error(err);
+                    reject(err);
+                }
+                else {
+                    logger_1.logger.info(JSON.stringify(data));
+                    resolve();
+                }
+            }));
+        });
     }
     /**
      * stop EC2 instance
@@ -75,27 +108,27 @@ class AwsLogic {
      * @returns result
      */
     stop_instance(instance_id) {
-        // create parameters
-        var params = {
-            InstanceIds: [
-                instance_id
-            ]
-        };
-        // result values
-        let result = false;
-        // start instance
-        this.ec2.stopInstances(params, ((err, data) => {
-            // error checks
-            if (err) {
-                logger_1.logger.error(err);
-            }
-            else {
-                logger_1.logger.info(JSON.stringify(data));
-                result = true;
-            }
-        }));
-        // return result
-        return result;
+        return new Promise((resolve, reject) => {
+            // create parameters
+            const params = {
+                InstanceIds: [
+                    instance_id
+                ],
+                DryRun: this.is_dry_run
+            };
+            // start instance
+            this.ec2.stopInstances(params, ((err, data) => {
+                // error checks
+                if (err) {
+                    logger_1.logger.error(err);
+                    reject(err);
+                }
+                else {
+                    logger_1.logger.info(JSON.stringify(data));
+                    resolve();
+                }
+            }));
+        });
     }
     /**
      * get EC2 instance status
@@ -104,14 +137,22 @@ class AwsLogic {
      */
     get_instance_status(instance_id) {
         return new Promise((resolve, reject) => {
+            // create parameters
+            const params = {
+                InstanceIds: [
+                    instance_id
+                ],
+                DryRun: this.is_dry_run
+            };
             // result values
             let result = false;
-            this.ec2.describeInstanceStatus({}, (err, data) => {
+            this.ec2.describeInstanceStatus(params, (err, data) => {
                 // error check
                 if (err) {
                     logger_1.logger.error(err);
                     // reject
                     reject(err);
+                    return;
                 }
                 else {
                     logger_1.logger.info(JSON.stringify(data));
@@ -129,8 +170,8 @@ class AwsLogic {
                                 return;
                             }
                             // Check status
-                            if (v.SystemStatus.Status == AwsLogic.OK_STR &&
-                                v.InstanceStatus.Status == AwsLogic.OK_STR) {
+                            if (v.SystemStatus.Status == AwsManager.OK_STR &&
+                                v.InstanceStatus.Status == AwsManager.OK_STR) {
                                 logger_1.logger.info(`Status check ok.`);
                                 result = true;
                             }
@@ -152,11 +193,14 @@ class AwsLogic {
      * @returns return public ip if instance is ok
      */
     get_public_ip(instance_id) {
-        const config = {};
+        // create parameters
+        const params = {
+            DryRun: this.is_dry_run
+        };
         return new Promise((resolve, reject) => {
             // result values
             let result = '';
-            this.ec2.describeNetworkInterfaces(config, (err, data) => {
+            this.ec2.describeNetworkInterfaces(params, (err, data) => {
                 // error check
                 if (err) {
                     // if error, reject
@@ -186,11 +230,13 @@ class AwsLogic {
                                 logger_1.logger.info(`instance id is matched. get public ip. instance_id = ${instance_id}, public_ip = ${result}`);
                                 // return result
                                 resolve(result);
+                                return;
                             }
                         });
                     }
                     // error check
                     if (result.length == 0) {
+                        logger_1.logger.error(`Get network public ip failed`);
                         reject(`Get network public ip failed`);
                     }
                 }
@@ -198,8 +244,8 @@ class AwsLogic {
         });
     }
 }
-exports.AwsLogic = AwsLogic;
+exports.AwsManager = AwsManager;
 // ok string from AWS instance status
-AwsLogic.OK_STR = 'ok';
-AwsLogic.REGION = 'ap-northeast-1';
-//# sourceMappingURL=aws_logic.js.map
+AwsManager.OK_STR = 'ok';
+AwsManager.REGION = 'ap-northeast-1';
+//# sourceMappingURL=aws_manager.js.map

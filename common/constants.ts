@@ -8,6 +8,36 @@ export class Constants {
     DISCORD_RECRUITMENT_EXPIRE_DELAY_MINUTE: number;
     DISCORD_RECRUITMENT_EXPIRE_DELAY_MINUTE_SQL: string;
 
+    // message section
+    DISCORD_MESSAGE_START_SERVER: string;
+    DISCORD_MESSAGE_START_SERVER_SUCCESS: string;
+    DISCORD_MESSAGE_START_SERVER_FAILED: string;
+    DISCORD_MESSAGE_GET_PUBLIC_IP_SUCCESS: string;
+    DISCORD_MESSAGE_GET_PUBLIC_IP_FAILED: string;
+    DISCORD_MESSAGE_STOP_SERVER_SUCCESS: string;
+    DISCORD_MESSAGE_STOP_SERVER_FAILED: string;
+
+    // message error section
+    DISCORD_ACTIVITY_NAME: string;
+    DISCORD_MESSAGE_IS_INVALID: string;
+    DISCORD_MESSAGE_TYPE_INVALID: string;
+
+    // command section
+    DISCORD_COMMAND_AWS_SERVER_START: string;
+    DISCORD_COMMAND_AWS_SERVER_GET_PUBLIC_IP: string;
+    DISCORD_COMMAND_AWS_SERVER_STOP: string;
+
+    // aws section
+    AWS_TARGET_INSTANCE_ID: string;
+
+    // static values
+    ID_INVALID: number;
+
+    TYPE_INIT: number;
+    TYPE_START_SERVER: number;
+    TYPE_GET_PUBLIC_IP: number;
+    TYPE_STOP_SERVER: number;
+
     static STRING_EMPTY = '';
 
     /**
@@ -39,6 +69,36 @@ export class Constants {
         }
         // create sql strings
         this.DISCORD_RECRUITMENT_EXPIRE_DELAY_MINUTE_SQL = `-${this.DISCORD_RECRUITMENT_EXPIRE_DELAY_MINUTE} minutes`;
+
+        // message section
+        this.DISCORD_MESSAGE_START_SERVER = process.env['DISCORD_MESSAGE_START_SERVER'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_START_SERVER_SUCCESS = process.env['DISCORD_MESSAGE_START_SERVER_SUCCESS'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_START_SERVER_FAILED = process.env['DISCORD_MESSAGE_START_SERVER_FAILED'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_GET_PUBLIC_IP_SUCCESS = process.env['DISCORD_MESSAGE_GET_PUBLIC_IP_SUCCESS'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_GET_PUBLIC_IP_FAILED = process.env['DISCORD_MESSAGE_GET_PUBLIC_IP_FAILED'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_STOP_SERVER_SUCCESS = process.env['DISCORD_MESSAGE_STOP_SERVER_SUCCESS'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_STOP_SERVER_FAILED = process.env['DISCORD_MESSAGE_STOP_SERVER_FAILED'] || Constants.STRING_EMPTY;
+
+        // message error section
+        this.DISCORD_ACTIVITY_NAME = process.env['DISCORD_ACTIVITY_NAME'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_IS_INVALID = process.env['DISCORD_MESSAGE_IS_INVALID'] || Constants.STRING_EMPTY;
+        this.DISCORD_MESSAGE_TYPE_INVALID = process.env['DISCORD_MESSAGE_TYPE_INVALID'] || Constants.STRING_EMPTY;
+
+        // command section
+        this.DISCORD_COMMAND_AWS_SERVER_START = process.env['DISCORD_COMMAND_AWS_SERVER_START'] || Constants.STRING_EMPTY;
+        this.DISCORD_COMMAND_AWS_SERVER_GET_PUBLIC_IP = process.env['DISCORD_COMMAND_AWS_SERVER_GET_PUBLIC_IP'] || Constants.STRING_EMPTY;
+        this.DISCORD_COMMAND_AWS_SERVER_STOP = process.env['DISCORD_COMMAND_AWS_SERVER_STOP'] || Constants.STRING_EMPTY;
+
+        // aws section
+        this.AWS_TARGET_INSTANCE_ID = process.env['aws_target_instance_id'] || Constants.STRING_EMPTY;
+
+        // static values
+        this.ID_INVALID = -1;
+
+        this.TYPE_INIT = 0;
+        this.TYPE_START_SERVER = 1;
+        this.TYPE_GET_PUBLIC_IP = 2;
+        this.TYPE_STOP_SERVER = 3;
     }
 
     /**
